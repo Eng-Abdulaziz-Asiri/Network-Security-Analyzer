@@ -1,15 +1,23 @@
-# 🛡️ Network Security Analyzer
+# 🛡️ Advanced Network Security Analyzer
 
-A Python & Bash tool that runs Nmap scans, analyzes port risks, and generates a professional dark-themed HTML security report.
+![Python](https://img.shields.io/badge/Python-3.x-yellow.svg)
+![Bash](https://img.shields.io/badge/Bash-Scripting-green.svg)
+![Nmap](https://img.shields.io/badge/Tool-Nmap-blue.svg)
 
-## ⚙️ Requirements
-- Linux OS
-- Python 3
-- Nmap (`sudo apt install nmap`)
+An automated, dual-language (Python & Bash) network reconnaissance tool that orchestrates Nmap scans, intelligently analyzes open ports for potential vulnerabilities, and generates a responsive, dark-themed HTML security report.
 
-## 🚀 How to Run
+## ✨ Key Features
+- **Dual Implementation:** Available in both pure Bash and Python to suit different environments.
+- **Smart Input Validation:** Built-in RegEx validation to ensure only valid IPv4 addresses or subnets are scanned.
+- **Automated Risk Profiling:** Intelligently categorizes discovered ports into Critical (🔴), Warning (🟡), and Safe (🟢) tiers based on known attack vectors.
+- **Dynamic HTML Reporting:** Translates raw terminal output into a readable, professional web report automatically.
 
-### Bash Version:
+## ⚙️ Prerequisites
+Ensure you have the following installed on your Linux machine:
+- `python3`
+- `nmap`
+
+*Install Nmap (if missing on Debian/Kali/Ubuntu):*
 ```bash
-chmod +x analyzer.sh
-sudo ./analyzer.sh
+sudo apt update && sudo apt install nmap -y
+
