@@ -1,66 +1,55 @@
 #!/bin/bash
 
-echo "=========================================="
-echo "   Advanced Network Security Analyzer     "
-echo "=========================================="
+echo -e "\e[1;36m=========================================\e[0m"
+echo -e "\e[1;36m   Advanced Network Security Analyzer    \e[0m"
+echo -e "\e[1;36m=========================================\e[0m"
+echo ""
 
-# 1. التفاعل مع المستخدم لطلب الهدف
-read -p "[?] Enter Target IP or Subnet (e.g., 127.0.0.1): " TARGET
+read -p "Enter Target IP or Domain: " TARGET
 
-# إذا لم يكتب المستخدم شيئاً، نستخدم الجهاز المحلي كافتراضي
-if [ -z "$TARGET" ]; then
-    TARGET="127.0.0.1"
-    echo "[-] No target provided. Defaulting to $TARGET"
+# Input Validation
+if ! [[ "$TARGET" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}(/[0-9]{1,2})?$ ]]; then
+    echo "[-] Error: Invalid IP address or subnet. Example: 192.168.1.1 or 192.168.1.0/24"
+    exit 1
 fi
 
-echo "[*] Starting Deep Scan (Versions & OS detection) on $TARGET..."
-echo "[*] This might take a minute... Please wait..."
+echo "[*] Scanning $TARGET... Please wait."
 
-# 2. فحص متقدم لاكتشاف الإصدارات والخدمات (-sV)
-nmap -sV -T4 $TARGET > raw_scan.txt
+# Nmap scan with proper quoting
+nmap -sV -T4 "$TARGET" > raw_scan.txt
 
-echo "[*] Analyzing risks and generating advanced HTML report..."
+echo "[*] Scan complete. Generating HTML report..."
 
-# 3. بناء تقرير HTML متقدم بتصميم ليلي احترافي (Dark Mode)
-cat << 'EOF' > report.html
-<!DOCTYPE html><html><head><title>Advanced Security Report</title>
-<style>
-body {font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #1e1e1e; color: #d4d4d4;}
-.container {width: 85%; margin: auto; background: #252526; padding: 25px; border-radius: 10px; box-shadow: 0px 4px 15px rgba(0,0,0,0.5); margin-top: 30px;}
-h2 {color: #4daafc; border-bottom: 1px solid #333; padding-bottom: 10px;}
-.info {background: #2d2d30; padding: 15px; border-radius: 5px; margin-bottom: 20px;}
-.critical {color: #f14c4c; font-weight: bold;}
-.warning {color: #cca700; font-weight: bold;}
-.safe {color: #89d185;}
-pre {background: #1e1e1e; padding: 15px; border-radius: 5px; overflow-x: auto; border: 1px solid #333; color: #d4d4d4;}
-</style>
-</head><body><div class="container">
-<h2>🛡️ Advanced Network Security Scan & Risk Assessment</h2>
-EOF
+echo "<html><head><style>
+body { background-color: #121212; color: #e0e0e0; font-family: Arial, sans-serif; padding: 20px; }
+.critical { color: #ff4d4d; font-weight: bold; }
+.warning { color: #ffb84d; font-weight: bold; }
+.safe { color: #4dff4d; font-weight: bold; }
+pre { background-color: #1e1e1e; padding: 15px; border-radius: 5px; overflow-x: auto; }
+</style></head><body>
+<h2>Network Security Scan Report</h2>
+<p><b>Target:</b> $TARGET</p>
+<p><b>Date:</b> $(date)</p>
+<h3>Analysis Results:</h3>
+<pre>" > report.html
 
-echo "<div class='info'>" >> report.html
-echo "<p><strong>🎯 Target:</strong> $TARGET</p>" >> report.html
-echo "<p><strong>📅 Date:</strong> $(date)</p>" >> report.html
-echo "</div>" >> report.html
-
-echo "<h3>📊 Scan Results & Vulnerability Analysis:</h3>" >> report.html
-echo "<pre>" >> report.html
-
-# 4. تحليل المخاطر: قراءة النتائج وتلوين الثغرات تلقائياً
+# Fixed Loop with extended ports and single redirect
 while IFS= read -r line; do
-    if [[ $line == *"23/tcp"* ]] || [[ $line == *"21/tcp"* ]]; then
-        echo "<span class='critical'>[CRITICAL RISK] $line (Unencrypted Protocol - Highly Vulnerable!)</span>" >> report.html
-    elif [[ $line == *"80/tcp"* ]]; then
-        echo "<span class='warning'>[WARNING] $line (HTTP is unencrypted, consider HTTPS)</span>" >> report.html
+    if [[ $line == *"23/tcp"* ]] || [[ $line == *"21/tcp"* ]] || \
+       [[ $line == *"445/tcp"* ]] || [[ $line == *"139/tcp"* ]] || \
+       [[ $line == *"3389/tcp"* ]]; then
+        echo "<span class='critical'>[CRITICAL] $line</span>"
+    elif [[ $line == *"80/tcp"* ]] || [[ $line == *"8080/tcp"* ]] || \
+         [[ $line == *"25/tcp"* ]] || [[ $line == *"110/tcp"* ]] || \
+         [[ $line == *"3306/tcp"* ]]; then
+        echo "<span class='warning'>[WARNING] $line</span>"
     elif [[ $line == *"open"* ]]; then
-        echo "<span class='safe'>[OPEN] $line</span>" >> report.html
+        echo "<span class='safe'>[OPEN] $line</span>"
     else
-        echo "$line" >> report.html
+        echo "$line"
     fi
 done < raw_scan.txt >> report.html
 
-echo "</pre></div></body></html>" >> report.html
+echo "</pre></body></html>" >> report.html
 
-echo "[+] Scan and Analysis Completed!"
-echo "[+] Advanced Report saved as report.html"
-echo "=========================================="
+echo "[+] Report generated successfully as 'report.html'"

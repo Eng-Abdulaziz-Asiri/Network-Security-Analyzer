@@ -1,68 +1,77 @@
 import subprocess
 import datetime
+import re
+import sys
 
-print("==========================================")
-print("   Advanced Security Analyzer (Python)    ")
-print("==========================================")
+def is_valid_target(target):
+    pattern = r'^(\d{1,3}\.){3}\d{1,3}(/\d{1,2})?$'
+    return re.match(pattern, target)
 
-# طلب الهدف من المستخدم
-target = input("[?] Enter Target IP or Subnet (Default: 127.0.0.1): ").strip()
-if not target:
-    target = "127.0.0.1"
+print("\033[1;36m=========================================\033[0m")
+print("\033[1;36m Python Network Security Analyzer v2.0   \033[0m")
+print("\033[1;36m=========================================\033[0m\n")
 
-print(f"[*] Starting Deep Scan on {target}...")
-print("[*] Please wait. Python is orchestrating the scan...")
+target = input("Enter Target IP or Subnet: ")
+
+if not is_valid_target(target):
+    print("[-] Error: Invalid IP address. Example: 192.168.1.1")
+    sys.exit(1)
+
+print(f"[*] Initializing Nmap scan against {target}...")
 
 try:
-    # تنفيذ فحص Nmap من داخل بايثون
-    result = subprocess.run(['nmap', '-sV', '-T4', target], capture_output=True, text=True)
+    result = subprocess.run(['nmap', '-sV', '-T4', target], capture_output=True, text=True, check=True)
     scan_output = result.stdout
+    print("[*] Scan finished successfully.")
+except subprocess.CalledProcessError as e:
+    print(f"[-] Nmap scan failed: {e}")
+    sys.exit(1)
+except FileNotFoundError:
+    print("[-] Error: Nmap is not installed. Run 'sudo apt install nmap'")
+    sys.exit(1)
 
-    print("[*] Scan complete. Analyzing risks and generating HTML...")
-
-    # تجهيز كود HTML بتصميم حديث ومتقدم
-    html_content = f"""<!DOCTYPE html>
-    <html><head><title>Python Security Report</title>
+html_content = f"""
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Security Report</title>
     <style>
-    body {{font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #0d1117; color: #c9d1d9;}}
-    .container {{width: 85%; margin: auto; background: #161b22; padding: 25px; border-radius: 10px; border: 1px solid #30363d; margin-top: 30px;}}
-    h2 {{color: #58a6ff; border-bottom: 1px solid #30363d; padding-bottom: 10px;}}
-    .info {{background: #21262d; padding: 15px; border-radius: 5px; margin-bottom: 20px;}}
-    .critical {{color: #ff7b72; font-weight: bold;}}
-    .warning {{color: #d2a8ff; font-weight: bold;}}
-    .safe {{color: #3fb950;}}
-    pre {{background: #010409; padding: 15px; border-radius: 5px; overflow-x: auto; border: 1px solid #30363d; color: #c9d1d9; font-size: 14px;}}
+        body {{ background-color: #0d1117; color: #c9d1d9; font-family: 'Courier New', Courier, monospace; padding: 20px; }}
+        h1 {{ color: #58a6ff; }}
+        .critical {{ color: #f85149; font-weight: bold; background-color: rgba(248,81,73,0.1); padding: 2px 5px; border-radius: 3px;}}
+        .warning {{ color: #d29922; font-weight: bold; background-color: rgba(210,153,34,0.1); padding: 2px 5px; border-radius: 3px;}}
+        .safe {{ color: #2ea043; font-weight: bold; }}
+        pre {{ background-color: #161b22; padding: 15px; border: 1px solid #30363d; border-radius: 6px; overflow-x: auto; line-height: 1.5;}}
     </style>
-    </head><body><div class="container">
-    <h2>🐍 Python-Powered Network Security Report</h2>
-    <div class="info">
-    <p><strong>🎯 Target:</strong> {target}</p>
-    <p><strong>📅 Date:</strong> {datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</p>
-    </div>
-    <h3>📊 Scan Results & Python Analysis:</h3>
+</head>
+<body>
+    <h1>🛡️ Automated Security Analysis</h1>
+    <p><strong>Target:</strong> {target}</p>
+    <p><strong>Scan Date:</strong> {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
     <pre>
-    """
+"""
 
-    # تحليل النتائج سطراً بسطر باستخدام بايثون
-    for line in scan_output.split('\n'):
-        if "21/tcp" in line or "23/tcp" in line:
-            html_content += f"<span class='critical'>[CRITICAL RISK] {line} (Unencrypted Protocol!)</span>\n"
-        elif "80/tcp" in line:
-            html_content += f"<span class='warning'>[WARNING] {line} (HTTP - Consider HTTPS)</span>\n"
-        elif "open" in line:
-            html_content += f"<span class='safe'>[OPEN] {line}</span>\n"
-        else:
-            html_content += f"{line}\n"
+critical_ports = ["21/tcp", "23/tcp", "445/tcp", "139/tcp", "3389/tcp"]
+warning_ports  = ["80/tcp", "8080/tcp", "25/tcp", "110/tcp", "3306/tcp"]
 
-    html_content += "</pre></div></body></html>"
+for line in scan_output.split('\n'):
+    if any(p in line for p in critical_ports):
+        html_content += f"<span class='critical'>[CRITICAL] {line}</span>\n"
+    elif any(p in line for p in warning_ports):
+        html_content += f"<span class='warning'>[WARNING] {line}</span>\n"
+    elif "open" in line:
+        html_content += f"<span class='safe'>[OPEN] {line}</span>\n"
+    else:
+        html_content += f"{line}\n"
 
-    # حفظ التقرير
-    with open("python_report.html", "w", encoding="utf-8") as f:
-        f.write(html_content)
+html_content += """
+    </pre>
+</body>
+</html>
+"""
 
-    print("[+] Success! Python Report saved as 'python_report.html'")
-    print("==========================================")
+with open('python_report.html', 'w') as f:
+    f.write(html_content)
 
-except Exception as e:
-    print(f"[-] An error occurred: {e}")
-    
+print("[+] Secure HTML report generated as 'python_report.html'")
