@@ -7,12 +7,6 @@
 
 An automated, dual-language (Python & Bash) network reconnaissance tool that runs Nmap scans, analyzes open ports for potential risks, and generates a professional dark-themed HTML security report.
 
-### 🖥️ Bash Report:
-![Bash Report](screenshot_bash.png)
-
-### 🐍 Python Report:
-![Python Report](screenshot_python.png)
-
 ## ✨ Key Features
 
 - **Dual Implementation:** Available in both Bash and Python.
@@ -40,6 +34,14 @@ sudo python3 py_analyzer.py
 > ```bash
 > firefox python_report.html &
 > ```
+
+## 🖥️ Report Preview
+
+### Bash Report:
+![Bash Report](screenshot_bash.png)
+
+### Python Report:
+![Python Report](screenshot_python.png)
 
 ## 📊 Risk Categories
 
