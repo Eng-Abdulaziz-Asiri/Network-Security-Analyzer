@@ -32,7 +32,7 @@ sudo python3 py_analyzer.py
 ```
 > After the scan completes, open the report in Firefox:
 > ```bash
-> firefox report.html &
+> firefox python_report.html &
 > ```
 
 ## 📊 Risk Categories
