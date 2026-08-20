@@ -22,24 +22,24 @@ a professional dark-themed HTML security report.
 
 ## 🚀 How to Run
 
-### 1. Clone the repository
-```bash
-git clone https://github.com/Eng-Abdulaziz-Asiri/Network-Security-Analyzer
-cd Network-Security-Analyzer
-```
-
-### 2. Run — Bash version
+### Bash version:
 ```bash
 chmod +x analyzer.sh
 sudo ./analyzer.sh
 ```
+> After the scan completes, open the report in Firefox:
+> ```bash
+> firefox report.html &
+> ```
 
-### 3. Run — Python version
+### Python version:
 ```bash
 sudo python3 py_analyzer.py
 ```
-
-> After the scan, open `report.html` in your browser to view the results.
+> After the scan completes, open the report in Firefox:
+> ```bash
+> firefox report.html &
+> ```
 
 ---
 
