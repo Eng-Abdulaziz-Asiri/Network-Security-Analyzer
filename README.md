@@ -19,10 +19,35 @@ An automated, dual-language (Python & Bash) network reconnaissance tool that run
 Clone the repo and run the launcher. It installs Nmap automatically if it's missing, lets you pick the Bash or Python version, and opens the report for you when the scan finishes:
 
 ```bash
-git clone [https://github.com/Eng-Abdulaziz-Asiri/Network-Security-Analyzer.git](https://github.com/Eng-Abdulaziz-Asiri/Network-Security-Analyzer.git)
+git clone https://github.com/Eng-Abdulaziz-Asiri/Network-Security-Analyzer.git
 cd Network-Security-Analyzer
 bash run.sh
+```
 
+That's it — no manual installation or setup steps needed.
+
+## 🔧 Manual Steps (Advanced)
+
+If you'd rather run each version yourself:
+
+### 🐚 Bash version (lightweight):
+```bash
+chmod +x analyzer.sh
+sudo ./analyzer.sh
+```
+> After the scan completes, open the report in Firefox:
+> ```bash
+> firefox report.html &
+> ```
+
+### 🐍 Python version (recommended):
+```bash
+sudo python3 py_analyzer.py
+```
+> After the scan completes, open the report in Firefox:
+> ```bash
+> firefox python_report.html &
+> ```
 
 ## 🖥️ Report Preview
 
