@@ -1,0 +1,65 @@
+name: Analyzer CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Nmap and ShellCheck
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y nmap shellcheck
+
+      - name: Lint scripts
+        run: |
+          bash -n run.sh analyzer.sh
+          shellcheck -S error run.sh analyzer.sh
+          python3 -m py_compile py_analyzer.py
+
+      - name: Start a test web service on localhost:8080
+        run: |
+          python3 -m http.server 8080 >/dev/null 2>&1 &
+          sleep 2
+
+      - name: Test Python analyzer (scan localhost only)
+        run: |
+          echo "127.0.0.1" | python3 py_analyzer.py
+          grep -q "WARNING.*8080/tcp" python_report.html
+          echo "Python report detected port 8080 as WARNING"
+
+      - name: Test Bash analyzer (scan localhost only)
+        run: |
+          echo "127.0.0.1" | bash analyzer.sh
+          grep -q "WARNING.*8080/tcp" report.html
+          echo "Bash report detected port 8080 as WARNING"
+
+      - name: Test input validation rejects bad targets
+        run: |
+          if echo "not-an-ip" | python3 py_analyzer.py; then exit 1; fi
+          if echo "999.x" | bash analyzer.sh; then exit 1; fi
+          echo "Invalid targets were rejected correctly"
+
+      - name: Test the one-command launcher
+        run: |
+          rm -f python_report.html
+          printf '1\n127.0.0.1\n' | bash run.sh
+          test -f python_report.html
+
+      - name: Upload sample reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sample-reports
+          path: |
+            python_report.html
+            report.html
