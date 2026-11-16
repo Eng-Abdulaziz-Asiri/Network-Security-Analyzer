@@ -26,27 +26,39 @@ jobs:
           shellcheck -S error run.sh analyzer.sh
           python3 -m py_compile py_analyzer.py
 
-      - name: Start a test web service on localhost:8080
+      - name: Start test services on localhost (8080, 2121, 1080)
         run: |
+          # 8080 must be WARNING. 2121 and 1080 contain "21" and "80" but
+          # are different ports, so they must NOT be flagged as 21 or 80.
           python3 -m http.server 8080 >/dev/null 2>&1 &
+          python3 -m http.server 2121 >/dev/null 2>&1 &
+          python3 -m http.server 1080 >/dev/null 2>&1 &
           sleep 2
 
       - name: Test Python analyzer (scan localhost only)
         run: |
           echo "127.0.0.1" | python3 py_analyzer.py
           grep -q "WARNING.*8080/tcp" python_report.html
-          echo "Python report detected port 8080 as WARNING"
+          grep -q "OPEN.*2121/tcp" python_report.html
+          grep -q "OPEN.*1080/tcp" python_report.html
+          if grep -qE "(CRITICAL|WARNING).*(2121|1080)/tcp" python_report.html; then exit 1; fi
+          echo "Python report: 8080 = WARNING, 2121/1080 = OPEN (exact port matching)"
 
       - name: Test Bash analyzer (scan localhost only)
         run: |
           echo "127.0.0.1" | bash analyzer.sh
           grep -q "WARNING.*8080/tcp" report.html
-          echo "Bash report detected port 8080 as WARNING"
+          grep -q "OPEN.*2121/tcp" report.html
+          grep -q "OPEN.*1080/tcp" report.html
+          if grep -qE "(CRITICAL|WARNING).*(2121|1080)/tcp" report.html; then exit 1; fi
+          echo "Bash report: 8080 = WARNING, 2121/1080 = OPEN (exact port matching)"
 
       - name: Test input validation rejects bad targets
         run: |
-          if echo "not-an-ip" | python3 py_analyzer.py; then exit 1; fi
-          if echo "999.x" | bash analyzer.sh; then exit 1; fi
+          for bad in "not-an-ip" "999.x" "999.1.1.1" "10.0.0.256" "10.0.0.0/33"; do
+            if echo "$bad" | python3 py_analyzer.py; then echo "Python accepted $bad"; exit 1; fi
+            if echo "$bad" | bash analyzer.sh; then echo "Bash accepted $bad"; exit 1; fi
+          done
           echo "Invalid targets were rejected correctly"
 
       - name: Test the one-command launcher
